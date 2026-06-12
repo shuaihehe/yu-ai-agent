@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
@@ -76,6 +77,9 @@ public class LoveApp {
         return loveReport;
     }
 
+    @Resource
+    private Advisor loveAppRagCloudAdvisor;
+
     // 知识库功能
     @Resource
     private VectorStore loveAppVectorStore;
@@ -87,7 +91,9 @@ public class LoveApp {
                 .advisors(advisorSpec -> advisorSpec
                         .param(ChatMemory.CONVERSATION_ID, chatId))
                 // 应用 RAG 知识库问答
-                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
+//                .advisors(new QuestionAnswerAdvisor(loveAppVectorStore))
+                // 应用 RAG 检索增强服务（基于云知识库）
+                .advisors(loveAppRagCloudAdvisor)
                 .call()
                 .chatResponse();
 
