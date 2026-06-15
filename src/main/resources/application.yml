@@ -3,6 +3,13 @@ spring:
     name: yu-ai-agent
   profiles:
     active: local
+  ai:
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        dimensions: 1024 # DashScope text-embedding-v3 输出 1024 维
+        distance-type: COSINE_DISTANCE
+        max-document-batch-size: 9 # Optional: Maximum number of documents per batch
 server:
   port: 8123
   servlet:

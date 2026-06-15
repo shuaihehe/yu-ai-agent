@@ -1,14 +1,19 @@
 package com.yupi.yuaiagent.app;
 
 import com.yupi.yuaiagent.chatmemory.FileBasedChatMemory;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -71,5 +76,47 @@ public class LoveApp {
         log.info("loveReport: {}", loveReport);
 
         return loveReport;
+    }
+
+    @Resource
+    private Advisor loveAppRagCloudAdvisor;
+
+    @Resource
+//    @Qualifier("pgVectorVectorStore")
+    private VectorStore pgVectorVectorStore;
+
+    // 知识库功能
+    @Resource
+    private VectorStore loveAppVectorStore;
+
+    public String doChatWithRag(String message, String chatId) {
+        ChatResponse chatResponse = chatClient
+                .prompt()
+                .user(message)
+                .advisors(advisorSpec -> advisorSpec
+                        .param(ChatMemory.CONVERSATION_ID, chatId))
+                // 应用 RAG 知识库问答
+                .advisors(RetrievalAugmentationAdvisor.builder()
+                        .documentRetriever(VectorStoreDocumentRetriever.builder()
+                                .vectorStore(loveAppVectorStore)
+                                .topK(3)
+                                .build())
+                        .build())
+//                // 应用 RAG 检索增强服务（基于云知识库）
+//                .advisors(loveAppRagCloudAdvisor)
+                // 应用 RAG 检索增强服务（基于 PgVector 向量存储）
+//                .advisors(RetrievalAugmentationAdvisor.builder()
+//                        .documentRetriever(VectorStoreDocumentRetriever.builder()
+//                                .vectorStore(pgVectorVectorStore)
+//                                .topK(3)
+//                                .build())
+//                        .build())
+                .call()
+                .chatResponse();
+
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("userMessage: {}", message);
+        log.info("chatResponse: {}", content);
+        return content;
     }
 }
