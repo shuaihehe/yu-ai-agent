@@ -79,11 +79,37 @@
             <version>1.15.0-beta25</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Pin to 1.0.0 (GA): 1.0.0-M6 transitively pulls in spring-ai-core:1.0.0-M6,
+             whose DefaultToolExecutionExceptionProcessor$Builder is missing the
+             rethrowExceptions(List) method that spring-ai-autoconfigure-model-tool:1.1.2 calls. -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-markdown-document-reader</artifactId>
-            <version>1.0.0-M6</version>
+            <version>1.0.0</version>
         </dependency>
+        <!-- 手动整合 PGVector 向量存储 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-pgvector-store</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+        <!-- 自动整合 PGVector 向量存储 -->
+        <!-- Source: https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-starter-vector-store-pgvector -->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.ai</groupId>-->
+<!--            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>-->
+<!--            <version>1.1.2</version>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
