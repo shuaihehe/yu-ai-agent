@@ -26,11 +26,23 @@ public class LoveAppDocumentLoader {
             Resource[] resources = resourcePatternResolver.getResources("classpath:document/*.md");
             for (Resource resource : resources) {
                 String filename = resource.getFilename();
+                // 根据文件名自动设置 status 元数据，便于 RAG 过滤检索
+                String status = "未知";
+                if (filename != null) {
+                    if (filename.contains("单身")) {
+                        status = "单身";
+                    } else if (filename.contains("已婚")) {
+                        status = "已婚";
+                    } else if (filename.contains("恋爱")) {
+                        status = "恋爱";
+                    }
+                }
                 MarkdownDocumentReaderConfig config = MarkdownDocumentReaderConfig.builder()
                         .withHorizontalRuleCreateDocument(true)
                         .withIncludeCodeBlock(false)
                         .withIncludeBlockquote(false)
                         .withAdditionalMetadata("filename", filename != null ? filename : "unknown")
+                        .withAdditionalMetadata("status", status)
                         .build();
 
                 MarkdownDocumentReader markdownDocumentReader = new MarkdownDocumentReader(resource, config);

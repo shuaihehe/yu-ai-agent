@@ -1,7 +1,10 @@
 package com.yupi.yuaiagent.app;
 
 import com.yupi.yuaiagent.chatmemory.FileBasedChatMemory;
+import com.yupi.yuaiagent.rag.LoveAppRagCustomAdvisorFactory;
+import com.yupi.yuaiagent.rag.QueryRewriter;
 import jakarta.annotation.Resource;
+import org.springframework.ai.rag.Query;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -89,19 +92,28 @@ public class LoveApp {
     @Resource
     private VectorStore loveAppVectorStore;
 
+    @Resource
+    private QueryRewriter queryRewriter;
+
     public String doChatWithRag(String message, String chatId) {
+        // 对原始查询进行重写，提升检索召回率
+        Query rewrittenQuery = queryRewriter.rewrite(message);
+
+        // 测试检索：检查“已婚”状态的文档是否能被过滤检索到
+        LoveAppRagCustomAdvisorFactory.testRetrieval(loveAppVectorStore, "已婚", rewrittenQuery.text());
+
         ChatResponse chatResponse = chatClient
                 .prompt()
-                .user(message)
+                .user(rewrittenQuery.text())
                 .advisors(advisorSpec -> advisorSpec
                         .param(ChatMemory.CONVERSATION_ID, chatId))
                 // 应用 RAG 知识库问答
-                .advisors(RetrievalAugmentationAdvisor.builder()
-                        .documentRetriever(VectorStoreDocumentRetriever.builder()
-                                .vectorStore(loveAppVectorStore)
-                                .topK(3)
-                                .build())
-                        .build())
+//                .advisors(RetrievalAugmentationAdvisor.builder()
+//                        .documentRetriever(VectorStoreDocumentRetriever.builder()
+//                                .vectorStore(loveAppVectorStore)
+//                                .topK(3)
+//                                .build())
+//                        .build())
 //                // 应用 RAG 检索增强服务（基于云知识库）
 //                .advisors(loveAppRagCloudAdvisor)
                 // 应用 RAG 检索增强服务（基于 PgVector 向量存储）
@@ -111,11 +123,17 @@ public class LoveApp {
 //                                .topK(3)
 //                                .build())
 //                        .build())
+                .advisors(
+                        LoveAppRagCustomAdvisorFactory.createLoveRagCustomAdvisor(
+                                loveAppVectorStore, "已婚"
+                        )
+                )
                 .call()
                 .chatResponse();
 
         String content = chatResponse.getResult().getOutput().getText();
         log.info("userMessage: {}", message);
+        log.info("rewrittenQuery: {}", rewrittenQuery.text());
         log.info("chatResponse: {}", content);
         return content;
     }
