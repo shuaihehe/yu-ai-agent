@@ -10,6 +10,15 @@ spring:
         dimensions: 1024 # DashScope text-embedding-v3 输出 1024 维
         distance-type: COSINE_DISTANCE
         max-document-batch-size: 9 # Optional: Maximum number of documents per batch
+    mcp:
+      client:
+        sse:
+          connections:
+            server1:
+              url: http://localhost:8127
+#        stdio:
+#          servers-configuration: classpath:mcp-servers.json
+
 server:
   port: 8123
   servlet:
@@ -31,3 +40,7 @@ knife4j:
   enable: true
   setting:
     language: zh_cn
+#logging:
+#  level:
+#    org.springframework.ai: DEBUG
+#    io.modelcontextprotocol: DEBUG

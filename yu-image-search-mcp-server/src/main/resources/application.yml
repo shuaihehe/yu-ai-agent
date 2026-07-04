@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: yu-image-search-mcp-server
+  config:
+    import: optional:file:./application-local.yml
+  profiles:
+    active: sse
+
+server:
+  port: 8127
